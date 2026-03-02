@@ -194,7 +194,7 @@ jobs:
           "
 
       - name: 上传构建结果
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: extension-builds-${{ github.sha }}
           path: |
