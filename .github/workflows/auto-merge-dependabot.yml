@@ -1,0 +1,129 @@
+name: 自动合并 Dependabot 更新
+
+on:
+  pull_request_target:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  enable-auto-merge:
+    name: 为符合条件的 Dependabot PR 开启自动合并
+    if: github.event.pull_request.user.login == 'dependabot[bot]' && !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 读取 Dependabot 元数据
+        id: metadata
+        uses: dependabot/fetch-metadata@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 判断是否允许自动合并
+        id: eligibility
+        env:
+          PACKAGE_ECOSYSTEM: ${{ steps.metadata.outputs.package-ecosystem }}
+          DEPENDENCY_TYPE: ${{ steps.metadata.outputs.dependency-type }}
+          UPDATE_TYPE: ${{ steps.metadata.outputs.update-type }}
+        run: |
+          auto_merge=false
+          reason="该 Dependabot 更新不在自动合并范围内"
+
+          if [ "$PACKAGE_ECOSYSTEM" = "github-actions" ]; then
+            auto_merge=true
+            reason="允许自动合并 GitHub Actions 更新"
+          elif [ "$PACKAGE_ECOSYSTEM" = "npm" ] && [ "$DEPENDENCY_TYPE" = "direct:development" ]; then
+            if [ "$UPDATE_TYPE" = "version-update:semver-patch" ] || [ "$UPDATE_TYPE" = "version-update:semver-minor" ]; then
+              auto_merge=true
+              reason="允许自动合并 npm 开发依赖的 patch/minor 更新"
+            fi
+          fi
+
+          echo "auto_merge=$auto_merge" >> "$GITHUB_OUTPUT"
+          echo "reason=$reason" >> "$GITHUB_OUTPUT"
+          echo "$reason"
+
+      - name: 自动批准符合条件的 PR
+        if: steps.eligibility.outputs.auto_merge == 'true'
+        uses: actions/github-script@v8
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { owner, repo } = context.repo;
+            const pull_number = context.payload.pull_request.number;
+
+            const reviews = await github.paginate(github.rest.pulls.listReviews, {
+              owner,
+              repo,
+              pull_number,
+              per_page: 100,
+            });
+
+            const alreadyApproved = reviews.some(
+              (review) =>
+                review.user?.login === "github-actions[bot]" &&
+                review.state === "APPROVED"
+            );
+
+            if (alreadyApproved) {
+              core.info("PR 已经有 github-actions[bot] 的批准记录，跳过。");
+              return;
+            }
+
+            await github.rest.pulls.createReview({
+              owner,
+              repo,
+              pull_number,
+              event: "APPROVE",
+              body: "自动批准符合策略的 Dependabot 依赖更新。",
+            });
+
+      - name: 开启自动合并
+        if: steps.eligibility.outputs.auto_merge == 'true'
+        uses: actions/github-script@v8
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const pullRequestId = context.payload.pull_request.node_id;
+
+            try {
+              await github.graphql(
+                `
+                  mutation EnableAutoMerge($pullRequestId: ID!) {
+                    enablePullRequestAutoMerge(
+                      input: {
+                        pullRequestId: $pullRequestId
+                        mergeMethod: SQUASH
+                      }
+                    ) {
+                      pullRequest {
+                        number
+                        autoMergeRequest {
+                          enabledAt
+                        }
+                      }
+                    }
+                  }
+                `,
+                { pullRequestId }
+              );
+
+              core.info("已为该 PR 开启自动合并，等待必需检查和分支保护条件满足。");
+            } catch (error) {
+              if (String(error.message).includes("Pull request is in clean status")) {
+                core.info("PR 已经满足条件并可能已启用自动合并，跳过重复设置。");
+                return;
+              }
+
+              throw error;
+            }
+
+      - name: 输出跳过原因
+        if: steps.eligibility.outputs.auto_merge != 'true'
+        run: echo "${{ steps.eligibility.outputs.reason }}"
