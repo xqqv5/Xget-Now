@@ -136,7 +136,7 @@ jobs:
       - name: 发布到 Chrome 应用商店
         continue-on-error: true
         id: chrome-publish
-        uses: mnao305/chrome-extension-upload@v5.0.0
+        uses: mnao305/chrome-extension-upload@v6.0.0
         with:
           file-path: packages/Xget-Now_${{ steps.version.outputs.version }}.chromium.zip
           extension-id: ${{ secrets.CHROME_EXTENSION_ID }}
