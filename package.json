@@ -56,8 +56,15 @@
     "url": "https://github.com/xixu-me/Xget-Now.git"
   },
   "scripts": {
-    "build": "echo 'No build process needed for Chrome extension'",
-    "test": "echo 'No tests specified'"
+    "build": "python build.py --platform all",
+    "build:package": "python build.py --platform all --package",
+    "build:userscript": "python build.py --platform userscript --package",
+    "test": "node --test",
+    "test:unit": "node --test tests/unit/download-core.test.js",
+    "test:e2e": "node --test tests/e2e/userscript.e2e.test.js"
   },
-  "version": "2.0.5"
+  "version": "2.0.5",
+  "devDependencies": {
+    "playwright": "^1.59.1"
+  }
 }

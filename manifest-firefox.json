@@ -3,6 +3,7 @@
     "persistent": true,
     "scripts": [
       "webext-compat.js",
+      "download-core.js",
       "background.js"
     ]
   },
@@ -26,10 +27,14 @@
     {
       "js": [
         "webext-compat.js",
+        "download-core.js",
         "content.js"
       ],
       "matches": [
         "https://github.com/*",
+        "https://raw.githubusercontent.com/*",
+        "https://codeload.github.com/*",
+        "https://objects.githubusercontent.com/*",
         "https://gitlab.com/*",
         "https://gitea.com/*",
         "https://codeberg.org/*",
@@ -72,6 +77,9 @@
     "storage",
     "activeTab",
     "https://github.com/*",
+    "https://raw.githubusercontent.com/*",
+    "https://codeload.github.com/*",
+    "https://objects.githubusercontent.com/*",
     "https://gitlab.com/*",
     "https://gitea.com/*",
     "https://codeberg.org/*",

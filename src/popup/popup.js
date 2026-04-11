@@ -8,6 +8,8 @@
  * - 提供平台开关控制
  */
 
+const core = window.XgetDownloadCore;
+
 document.addEventListener("DOMContentLoaded", async () => {
   // 确保有可用的API
   if (
@@ -70,6 +72,7 @@ async function loadSettings() {
       throw new Error("No compatible API available");
     }
 
+    settings = core ? core.normalizeSettings(settings) : settings;
     console.log("Settings received:", settings);
 
     if (!settings) {
@@ -404,18 +407,17 @@ function validateDomain() {
 }
 
 function cleanupDomain(domain) {
-  // 如果意外包含协议，则删除它
-  domain = domain.replace(/^https?:\/\//, "");
+  if (core) {
+    return core.sanitizeDomain(domain);
+  }
 
-  // 删除末尾斜杠
-  domain = domain.replace(/\/$/, "");
-
-  return domain;
+  return String(domain || "")
+    .replace(/^https?:\/\//, "")
+    .replace(/\/$/, "");
 }
 
 function isValidDomain(domain) {
-  // 如果存在协议则删除它
-  domain = domain.replace(/^https?:\/\//, "");
+  domain = cleanupDomain(domain);
 
   // 基本域名验证模式
   const domainPattern =

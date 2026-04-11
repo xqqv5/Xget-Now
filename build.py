@@ -13,6 +13,7 @@
 import argparse
 import json
 import os
+import re
 import shutil
 import zipfile
 from pathlib import Path
@@ -65,6 +66,19 @@ def copy_common_files(build_dir):
     # 复制图标目录
     if os.path.exists("icons"):
         shutil.copytree("icons", build_dir / "icons", dirs_exist_ok=True)
+
+
+def read_package_metadata():
+    with open("package.json", encoding="utf-8") as f:
+        package = json.load(f)
+
+    return {
+        "name": package["name"],
+        "version": package["version"],
+        "description": package["description"],
+        "author": package["author"],
+        "homepage": package["homepage"],
+    }
 
 
 def build_chrome():
@@ -152,6 +166,11 @@ def flatten_for_browser(build_dir, platform):
     platforms_file = src_dir / "shared" / "platforms.js"
     if platforms_file.exists():
         shutil.copy2(platforms_file, build_dir / "platforms.js")
+
+    # shared/download-core.js -> download-core.js
+    download_core_file = src_dir / "shared" / "download-core.js"
+    if download_core_file.exists():
+        shutil.copy2(download_core_file, build_dir / "download-core.js")
 
     # shared/platform-detector.js -> platform-detector.js
     detector_file = src_dir / "shared" / "platform-detector.js"
@@ -256,6 +275,79 @@ def create_package(build_dir, platform):
     return package_path
 
 
+def create_userscript_package(script_path):
+    package_dir = Path("packages")
+    package_dir.mkdir(exist_ok=True)
+
+    metadata = read_package_metadata()
+    package_name = f"Xget-Now_{metadata['version']}.userscript.user.js"
+    package_path = package_dir / package_name
+    shutil.copy2(script_path, package_path)
+    print(f"用户脚本包已创建: {package_path}")
+    return package_path
+
+
+def extract_userscript_matches():
+    source = Path("src/shared/download-core.js").read_text(encoding="utf-8")
+    match = re.search(
+        r"const CORE_USERSCRIPT_MATCHES = \[(.*?)\];",
+        source,
+        re.DOTALL,
+    )
+
+    if not match:
+        raise ValueError("无法从 download-core.js 中提取 CORE_USERSCRIPT_MATCHES")
+
+    raw_items = match.group(1)
+    return re.findall(r'"([^"]+)"', raw_items)
+
+
+def build_userscript():
+    print("构建 userscript 版本...")
+    build_dir = create_build_directory("userscript")
+    metadata = read_package_metadata()
+    matches = extract_userscript_matches()
+
+    metadata_lines = [
+        "// ==UserScript==",
+        "// @name         Xget Now",
+        f"// @namespace    {metadata['homepage']}",
+        f"// @version      {metadata['version']}",
+        f"// @description  {metadata['description']}",
+        f"// @author       {metadata['author']}",
+        "// @license      GPL-3.0",
+    ]
+
+    metadata_lines.extend(f"// @match        {pattern}" for pattern in matches)
+    metadata_lines.extend(
+        [
+            "// @grant        GM_getValue",
+            "// @grant        GM_setValue",
+            "// @grant        GM_deleteValue",
+            "// @grant        GM_registerMenuCommand",
+            "// @grant        GM_xmlhttpRequest",
+            "// @connect      *",
+            "// @run-at       document-start",
+            "// ==/UserScript==",
+            "",
+        ]
+    )
+
+    script_parts = [
+        "\n".join(metadata_lines),
+        Path("src/shared/download-core.js").read_text(encoding="utf-8"),
+        "",
+        Path("src/userscript/index.js").read_text(encoding="utf-8"),
+        "",
+    ]
+
+    output_path = build_dir / "xget-now.user.js"
+    output_path.write_text("\n".join(script_parts), encoding="utf-8")
+
+    print(f"Userscript 构建完成: {output_path}")
+    return output_path
+
+
 def validate_manifest(manifest_path, platform):
     """
     验证 manifest 文件格式和内容
@@ -299,7 +391,7 @@ def main():
     parser = argparse.ArgumentParser(description="构建 Xget Now 扩展")
     parser.add_argument(
         "--platform",
-        choices=["chrome", "firefox", "all"],
+        choices=["chrome", "firefox", "userscript", "all"],
         default="all",
         help="要构建的平台",
     )
@@ -312,7 +404,7 @@ def main():
 
     platforms = []
     if args.platform == "all":
-        platforms = ["chrome", "firefox"]
+        platforms = ["chrome", "firefox", "userscript"]
     else:
         platforms = [args.platform]
 
@@ -324,6 +416,12 @@ def main():
                 build_dir = build_chrome()
             elif platform == "firefox":
                 build_dir = build_firefox()
+            elif platform == "userscript":
+                userscript_path = build_userscript()
+                build_results.append((platform, userscript_path))
+                if args.package:
+                    create_userscript_package(userscript_path)
+                continue
 
             # 验证 manifest
             manifest_path = build_dir / "manifest.json"
@@ -345,7 +443,7 @@ def main():
         print(f"✓ {platform}: {build_dir}")
 
     if args.package:
-        print("\n扩展包位于 packages/ 目录")
+        print("\n构建包位于 packages/ 目录")
 
 
 if __name__ == "__main__":

@@ -16,10 +16,14 @@
     {
       "js": [
         "webext-compat.js",
+        "download-core.js",
         "content.js"
       ],
       "matches": [
         "https://github.com/*",
+        "https://raw.githubusercontent.com/*",
+        "https://codeload.github.com/*",
+        "https://objects.githubusercontent.com/*",
         "https://gitlab.com/*",
         "https://gitea.com/*",
         "https://codeberg.org/*",
@@ -51,6 +55,9 @@
   "description": "为 Chromium 浏览器提供的 Xget 下载加速扩展，支持 GitHub、GitLab、npm、PyPI 等众多平台的文件下载加速",
   "host_permissions": [
     "https://github.com/*",
+    "https://raw.githubusercontent.com/*",
+    "https://codeload.github.com/*",
+    "https://objects.githubusercontent.com/*",
     "https://gitlab.com/*",
     "https://gitea.com/*",
     "https://codeberg.org/*",
