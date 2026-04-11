@@ -4,16 +4,30 @@
 
 A cross-browser extension for Chromium and Firefox that accelerates file downloads by seamlessly forwarding them to an [Xget](https://github.com/xixu-me/Xget) instance.
 
-## 🚀 Features
+> [!NOTE]
+> Quick start: install the store version, enter your Xget domain such as `xget.xi-xu.me`, and leave the target platform toggles enabled.
 
-- **🎯 Automatic Download Acceleration**: Seamlessly redirect downloads through Xget for faster speeds
-- **⚙️ Configurable Settings**: Customize your Xget domain and platform preferences
-- **🔔 Smart Notifications**: Visual feedback when downloads are redirected
-- **🛡️ Privacy-First**: All processing happens locally in your browser
-- **🎛️ Per-Platform Control**: Enable/disable acceleration for specific platforms
-- **🌐 Cross-Browser Support**: Works on both Chromium and Firefox browsers
+## Overview
 
-## 📦 Installation
+Xget Now detects real download links on supported websites, rewrites them to your Xget domain, and keeps the browser's native download flow intact. You do not need to modify the original site or manually copy download URLs.
+
+## Features
+
+- Automatic download acceleration: seamlessly redirect downloads through Xget for faster speeds.
+- Configurable settings: customize your Xget domain and platform preferences.
+- Smart notifications: visual feedback when downloads are redirected.
+- Privacy-first: all processing happens locally in your browser.
+- Per-platform control: enable or disable acceleration for specific platforms.
+- Cross-browser support: works on both Chromium and Firefox browsers.
+
+## Supported Platforms
+
+- Code hosting: GitHub, GitLab, Gitea, Codeberg, SourceForge, AOSP.
+- AI / ML: Hugging Face.
+- Package and distribution platforms: npm, PyPI, PyPI Files, Conda, Conda Community, Maven Central, Apache Downloads, Gradle Plugin Portal, RubyGems, CRAN, CPAN, CTAN, Go Modules, NuGet, Crates.io, Packagist.
+- Other platforms: arXiv, F-Droid.
+
+## Installation
 
 ### Store Availability
 
@@ -24,206 +38,166 @@ A cross-browser extension for Chromium and Firefox that accelerates file downloa
 
 ### Manual Installation
 
-If you prefer to manually install the extension or if the store version is unavailable, you can download and install it directly:
+If you prefer manual installation, or if a store listing is unavailable, you can install Xget Now from GitHub releases or directly from source.
 
-#### Option 1: Install from GitHub Releases (Recommended)
+#### Option 1: Install from GitHub Releases
 
-1. **Download the Extension**
-   - Go to the [Releases page](https://github.com/xixu-me/Xget-Now/releases/latest)
-   - Download the appropriate extension file for your browser:
-     - `Xget-Now_x.x.x.chromium.zip` - For all Chromium-based browsers (Chrome, Edge, Opera, etc.)
-     - `Xget-Now_x.x.x.firefox.zip` - For Firefox browsers
-
-2. **Install in Chrome**
-   - Extract the downloaded Chromium version .zip file
-   - Open Chrome and navigate to `chrome://extensions/`
-   - Enable "Developer mode" (toggle in the top right corner)
-   - Click "Load unpacked" and select the extracted folder
-
-3. **Install in Firefox**
-   - Open Firefox and navigate to `about:debugging`
-   - Click "This Firefox"
-   - Click "Load Temporary Add-on"
-   - Select the downloaded Firefox version .zip file or the `manifest.json` file from the extracted folder
-
-4. **Install in Edge**
-   - Extract the downloaded Chromium version .zip file
-   - Open Edge and navigate to `edge://extensions/`
-   - Enable "Developer mode" (toggle in the left sidebar)
-   - Click "Load unpacked" and select the extracted folder
-
-5. **Install in Other Chromium-Based Browsers**
-   - Use the Chromium version of the extension package
-   - Follow similar steps as Chrome or Edge, ensuring "Developer mode" is enabled first
-   - Refer to your specific browser's extension installation guide
+1. Go to the [Releases page](https://github.com/xixu-me/Xget-Now/releases/latest).
+2. Download the package for your browser:
+   - `Xget-Now_x.x.x.chromium.zip`: for Chromium-based browsers such as Chrome, Edge, and Opera.
+   - `Xget-Now_x.x.x.firefox.xpi`: for Firefox.
+3. Install in Chrome:
+   - Extract the Chromium `.zip` package.
+   - Open `chrome://extensions/`.
+   - Enable "Developer mode" in the top-right corner.
+   - Click "Load unpacked" and select the extracted folder.
+4. Install in Firefox:
+   - Open `about:debugging`.
+   - Click "This Firefox".
+   - Click "Load Temporary Add-on".
+   - Select the Firefox `.xpi` file, or the `manifest.json` file from an extracted package.
+5. Install in Edge:
+   - Extract the Chromium `.zip` package.
+   - Open `edge://extensions/`.
+   - Enable "Developer mode" in the left sidebar.
+   - Click "Load unpacked" and select the extracted folder.
+6. Install in other Chromium-based browsers:
+   - Use the Chromium package.
+   - Enable that browser's developer mode first.
+   - Follow the browser-specific extension loading instructions.
 
 #### Option 2: Install from Source
 
-1. **Clone the Repository**
+1. Clone the repository:
 
    ```bash
    git clone https://github.com/xixu-me/Xget-Now.git
    cd Xget-Now
    ```
 
-2. **Build the Extension (Optional)**
+2. Build the extension if needed:
 
-   If you want to use the optimized version:
+   `build.py` only uses the Python standard library, so Python 3.7+ is enough.
 
    ```bash
-   # Install Python 3.7+
-   pip install -r requirements.txt  # If there's a requirements file
-
-   # Build for specific browser
-   python build.py --platform chrome    # Build Chrome version
-   python build.py --platform firefox   # Build Firefox version
-   python build.py --platform all       # Build all versions
+   python build.py --platform chrome
+   python build.py --platform firefox
+   python build.py --platform all
+   python build.py --platform all --package
    ```
 
-3. **Load in Browser**
-
-   **Chromium Browsers:**
-   - Open your browser's extensions management page (`chrome://extensions/` or `edge://extensions/`)
-   - Enable "Developer mode"
-   - Click "Load unpacked" and select:
-     - The repository root directory (if using raw source)
-     - The `build/chrome/` directory (if using built version)
-
-   **Firefox Browser:**
-   - Open `about:debugging`
-   - Click "This Firefox"
-   - Click "Load Temporary Add-on"
-   - Select either:
-     - `manifest-firefox.json` from the repository root (if using raw source)
-     - `manifest.json` from the `build/firefox/` directory (if using built version)
+3. Load it in the browser:
+   - Chromium browsers:
+     - Open `chrome://extensions/` or `edge://extensions/`.
+     - Enable "Developer mode".
+     - Click "Load unpacked" and select either the repository root, or `build/chrome/` if you built the packaged version.
+   - Firefox:
+     - Open `about:debugging`.
+     - Click "This Firefox".
+     - Click "Load Temporary Add-on".
+     - Select `manifest-firefox.json` from the repository root, or `build/firefox/manifest.json` from a build output.
 
 #### Verify Installation
 
-After installation, you should see the Xget extension icon in your browser toolbar. Click it to configure your Xget domain and start accelerating downloads!
+After installation, you should see the Xget Now icon in the browser toolbar. Click it, configure your Xget domain, and start accelerating downloads.
 
-## ⚙️ Configuration
+## Configuration
 
-1. **Configure Xget Domain**
-   - Click the extension icon in the toolbar
-   - Enter your Xget domain (e.g., `xget.xi-xu.me`)
-   - Enable the extension
+1. Click the extension icon in the browser toolbar.
+2. Enter your Xget domain, for example `xget.xi-xu.me`.
+3. Enable the extension and toggle supported platforms on or off as needed.
+4. Visit any supported platform and click download links as usual.
+5. Downloads will automatically be routed through Xget.
 
-2. **Select Platforms**
-   - Toggle switches for individual platforms as needed
-   - All platforms are enabled by default
+## How It Works
 
-3. **Start Downloading**
-   - Visit any supported platform
-   - Click download links as usual
-   - Downloads will automatically be accelerated through Xget
+1. Detection: the extension monitors download links on supported platforms.
+2. Transformation: URLs are converted to an Xget-compatible format.
+3. Redirection: downloads are routed through your configured Xget domain.
+4. Acceleration: Xget's CDN and optimization features provide faster download speeds.
 
-## 🔧 How It Works
-
-1. **Detection**: The extension monitors download links on supported platforms
-2. **Transformation**: URLs are automatically converted to Xget-compatible format
-3. **Redirection**: Downloads are routed through your configured Xget domain
-4. **Acceleration**: Xget's global CDN and optimization features provide faster download speeds
-
-## 📋 Requirements
+## Requirements
 
 ### Browser Support
 
-**Chromium Browsers:**
-
-- **Chrome**: Version 88+
-- **Edge**: Version 88+
-- **Opera**: Version 74+
-- **Other Chromium-based browsers**: Versions supporting Manifest V3
-
-**Firefox Browsers:**
-
-- **Firefox**: Version 109+
-- **Firefox ESR**: Version 109+
+- Chrome: 88+.
+- Edge: 88+.
+- Opera: 74+.
+- Other Chromium-based browsers: versions with Manifest V3 support.
+- Firefox: 109+.
+- Firefox ESR: 109+.
 
 ### Xget Instance
 
-Use the pre-deployed instance `xget.xi-xu.me` or deploy your own by following the [Xget deployment documentation](https://github.com/xixu-me/Xget#-deployment).
+Use the pre-deployed instance `xget.xi-xu.me`, or deploy your own by following the [Xget deployment documentation](https://github.com/xixu-me/Xget#-deployment).
 
-## 🔒 Privacy & Security
+## Privacy and Security
 
-- **Local Processing**: All URL transformations happen in your browser
-- **No Data Collection**: The extension doesn't collect or transmit personal data
-- **Minimal Permissions**: Only requests necessary permissions for functionality
-- **Open Source**: Full source code available for inspection
+- Local processing: all URL transformations happen in your browser.
+- No data collection: the extension does not collect or transmit personal data.
+- Minimal permissions: it only requests permissions needed for the feature set.
+- Open source: the full source code is available for inspection.
 
-See our [Privacy Policy](PRIVACY_POLICY.md) for complete details.
+See the [Privacy Policy](PRIVACY_POLICY.md) for complete details.
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
-**Extension Not Working?**
+**Extension not working?**
 
-- Ensure you've configured a valid Xget domain
-- Check if the extension is enabled in the popup
-- Verify the target platform is enabled
-- Try refreshing the page after changing settings
+- Ensure you configured a valid Xget domain.
+- Check whether the extension is enabled in the popup.
+- Verify that the target platform is enabled.
+- Refresh the page after changing settings.
 
-**Downloads Not Being Redirected?**
+**Downloads not being redirected?**
 
-- Refresh the page after changing settings
-- Check browser console for error messages (F12 → Console)
-- Ensure the link is a recognized download type
-- Verify you're clicking an actual download link, not a navigation link
+- Refresh the page after changing settings.
+- Check the browser console for error messages (`F12` -> Console).
+- Ensure the link is a recognized download type.
+- Confirm that you clicked an actual download link rather than a navigation link.
 
-**Xget Domain Issues?**
+**Xget domain issues?**
 
-- Domain should be without the `https://` protocol
-- Example: `xget.xi-xu.me` (not `https://xget.xi-xu.me`)
-- Check if the domain is accessible in your browser
-- Try using the default pre-deployed instance: `xget.xi-xu.me`
+- Enter the domain without the `https://` protocol.
+- Example: `xget.xi-xu.me`, not `https://xget.xi-xu.me`.
+- Check whether the domain is reachable in your browser.
+- Try the default pre-deployed instance first: `xget.xi-xu.me`.
 
-**Performance Issues?**
+**Performance issues?**
 
-- Check your network connection
-- Try a different Xget domain if available
-- Verify the target platform's servers are responsive
-- Clear browser cache and reload the extension
+- Check your network connection.
+- Try another Xget domain if one is available.
+- Verify that the target platform is responding normally.
+- Clear the browser cache and reload the extension.
 
-**Firefox-Specific Issues?**
+**Firefox-specific issues?**
 
-- Ensure Firefox version is 109+
-- Check if the extension is properly loaded in `about:debugging`
-- Firefox may require a browser restart to fully apply extension settings
-- Check Firefox's Privacy & Security settings aren't blocking extension features
+- Ensure Firefox is version 109 or newer.
+- Check whether the extension is correctly loaded in `about:debugging`.
+- Firefox may require a restart to fully apply extension settings.
+- Review Firefox Privacy & Security settings to make sure they are not blocking extension behavior.
 
 ### Debug Mode
 
-**Chromium Browsers:**
+In Chromium browsers, open DevTools and inspect the Console tab. In Firefox, open `about:debugging`, click "This Firefox", find Xget Now, click "Inspect", and review the console output there.
 
-Enable Chrome DevTools and check the Console tab for debug messages:
+Common debug messages:
 
-**Firefox Browser:**
+- Extension loaded: `Xget Now: Content script loaded`
+- Download redirect: `Redirecting download: [original] -> [Xget]`
+- Settings changed: `Settings updated! Click to refresh page`
 
-1. Open `about:debugging`
-2. Click "This Firefox"
-3. Find the Xget Now extension and click "Inspect"
-4. View console messages in the opened developer tools
-
-**Common Debug Messages:**
-
-- Extension loaded: "Xget Now: Content script loaded"
-- Download redirect: "Redirecting download: [original] -> [Xget]"
-- Settings changed: "Settings updated! Click to refresh page"
-
-## 📄 License
-
-This repository is licensed under the GPL-3.0 License - see the [LICENSE](LICENSE) file for details.
-
-## ❓ FAQ
+## FAQ
 
 ### Is this extension free?
 
-Yes, the extension is completely free and open source under the GPL-3.0 license.
+Yes. The extension is completely free and open source under GPL-3.0.
 
 ### Can I use my own Xget server?
 
-Absolutely! You can deploy your own Xget instance using the [Xget repository](https://github.com/xixu-me/Xget) and configure the extension to use your domain.
+Yes. You can deploy your own Xget instance from the [Xget repository](https://github.com/xixu-me/Xget) and point the extension to your own domain.
 
 ### Why are some downloads still going through the original server?
 
@@ -231,37 +205,40 @@ The extension only redirects recognized download links. Navigation links, previe
 
 ### Will my browsing data be collected?
 
-No, the extension runs entirely locally. No browsing data is collected or transmitted. See our [Privacy Policy](PRIVACY_POLICY.md) for details.
+No. The extension runs entirely locally, and no browsing data is collected or transmitted. See the [Privacy Policy](PRIVACY_POLICY.md) for details.
 
 ### How much faster are the downloads?
 
-Speed improvements vary depending on your location, network, and file size. Typical improvements range from 2x to 10x faster.
+Speed improvements depend on your location, network conditions, and file size. Typical gains range from roughly 2x to 10x.
 
 ### Can I disable the extension for specific websites?
 
-Yes, use the per-platform toggle switches in the extension popup to disable acceleration for specific platforms.
+Yes. Use the per-platform toggle switches in the popup to disable acceleration for specific supported platforms.
 
 ### Why are there different versions for Chrome and Firefox?
 
-Due to browser architecture differences, we've optimized for each browser:
+The two versions are optimized for different browser architectures:
 
-- **Chrome version**: Uses Manifest V3, supporting the latest extension APIs and security features
-- **Firefox version**: Uses Manifest V2, ensuring optimal compatibility with Firefox's extension system
+- Chrome version: uses Manifest V3 and newer extension APIs.
+- Firefox version: uses Manifest V2 for Firefox compatibility.
 
-The core functionality is identical across both versions, with only slight technical implementation differences.
+The core behavior remains the same, while the implementation details differ slightly.
 
-### Can I use it in both Chrome and Firefox simultaneously?
+### Can I use it in Chrome and Firefox at the same time?
 
-Absolutely! You can install and use Xget Now in multiple browsers simultaneously, and they'll work independently with their own settings.
+Yes. You can install Xget Now in multiple browsers at once, and each browser keeps its own settings.
 
-## 🌟 Support Us
+## Support
 
-If you find this extension useful, please:
+If Xget Now is useful to you, consider:
 
-- ⭐ Star this repository
-- 📝 Leave a review:
+- Starring the repository.
+- Leaving a review:
   - [Chrome Web Store](https://chromewebstore.google.com/detail/ajiejgobfcifcikbahpijopolfjoodgf?hl=en)
   - [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/xget-now/)
   - [Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/jigpfhbegabdenhihpplcjhpfdcgnalc)
-- 🐛 Report bugs or suggest features via [GitHub Issues](https://github.com/xixu-me/Xget-Now/issues)
-- 📢 Share with others who might benefit from faster downloads
+- Reporting bugs or suggesting features via [GitHub Issues](https://github.com/xixu-me/Xget-Now/issues).
+- Sharing it with others who might benefit from faster downloads.
+
+> [!NOTE]
+> This repository is licensed under GPL-3.0. See [LICENSE](LICENSE) for the full text.
