@@ -45,6 +45,9 @@ jobs:
         with:
           node-version: "18"
 
+      - name: 安装 Node.js 依赖
+        run: npm ci
+
       - name: 验证 manifest 文件
         run: |
           echo "验证 Chrome manifest..."
@@ -78,6 +81,8 @@ jobs:
             "src/content/index.js"
             "src/popup/popup.js"
             "src/popup/index.html"
+            "src/shared/download-core.js"
+            "src/userscript/index.js"
             "src/shared/compat/webext-compat.js"
             "src/shared/compat/firefox-compat.js"
             "src/shared/platform-detector.js"
@@ -88,9 +93,9 @@ jobs:
 
           for file in "${required_files[@]}"; do
             if [ -f "$file" ]; then
-              echo "✅ $file"
+              echo "[OK] $file"
             else
-              echo "❌ $file 缺失"
+              echo "[FAIL] $file 缺失"
               exit 1
             fi
           done
@@ -99,6 +104,7 @@ jobs:
         run: |
           echo "运行基础测试..."
           python dev.py test
+          npm run test:unit
 
       - name: 运行代码检查
         run: |
@@ -112,10 +118,10 @@ jobs:
 
           # 验证构建结果
           if [ -d "build/chrome" ]; then
-            echo "✅ Chrome 构建目录已创建"
+            echo "[OK] Chrome 构建目录已创建"
             ls -la build/chrome/
           else
-            echo "❌ Chrome 构建失败"
+            echo "[FAIL] Chrome 构建失败"
             exit 1
           fi
 
@@ -126,10 +132,23 @@ jobs:
 
           # 验证构建结果
           if [ -d "build/firefox" ]; then
-            echo "✅ Firefox 构建目录已创建"
+            echo "[OK] Firefox 构建目录已创建"
             ls -la build/firefox/
           else
-            echo "❌ Firefox 构建失败"
+            echo "[FAIL] Firefox 构建失败"
+            exit 1
+          fi
+
+      - name: 测试 userscript 构建
+        run: |
+          echo "测试 userscript 构建..."
+          python build.py --platform userscript
+
+          if [ -f "build/userscript/xget-now.user.js" ]; then
+            echo "[OK] userscript 构建文件已生成"
+            ls -la build/userscript/
+          else
+            echo "[FAIL] userscript 构建失败"
             exit 1
           fi
 
@@ -137,26 +156,36 @@ jobs:
         run: |
           echo "测试扩展包生成..."
           python build.py --platform all --package
+          VERSION=$(node -p 'require("./package.json").version')
 
           # 验证扩展包
           if [ -d "packages" ]; then
-            echo "✅ 扩展包目录已创建"
+            echo "[OK] 扩展包目录已创建"
             ls -la packages/
             
-            # 检查是否有 Chrome 和 Firefox 包
-            if [ -f packages/xget-now-chrome-v*.zip ]; then
-              echo "✅ Chrome 扩展包已生成"
+            # 检查是否有 Chrome、Firefox 和 userscript 包
+            if [ -f "packages/Xget-Now_${VERSION}.chromium.zip" ]; then
+              echo "[OK] Chrome 扩展包已生成"
             else
-              echo "❌ Chrome 扩展包生成失败"
+              echo "[FAIL] Chrome 扩展包生成失败"
+              exit 1
             fi
             
-            if [ -f packages/xget-now-firefox-v*.zip ]; then
-              echo "✅ Firefox 扩展包已生成"
+            if [ -f "packages/Xget-Now_${VERSION}.firefox.xpi" ]; then
+              echo "[OK] Firefox 扩展包已生成"
             else
-              echo "❌ Firefox 扩展包生成失败"
+              echo "[FAIL] Firefox 扩展包生成失败"
+              exit 1
+            fi
+
+            if [ -f "packages/Xget-Now_${VERSION}.userscript.user.js" ]; then
+              echo "[OK] userscript 包已生成"
+            else
+              echo "[FAIL] userscript 包生成失败"
+              exit 1
             fi
           else
-            echo "❌ 扩展包生成失败"
+            echo "[FAIL] 扩展包生成失败"
             exit 1
           fi
 
@@ -193,6 +222,19 @@ jobs:
             }
           "
 
+          echo "检查 userscript 构建..."
+          node -e "
+            const fs = require('fs');
+            const userscript = fs.readFileSync('build/userscript/xget-now.user.js', 'utf8');
+            if (!userscript.includes('@grant        GM_xmlhttpRequest')) {
+              throw new Error('userscript 构建缺少 GM_xmlhttpRequest grant');
+            }
+            if (!userscript.includes('@run-at       document-start')) {
+              throw new Error('userscript 构建缺少 document-start 配置');
+            }
+            console.log('Userscript 元数据验证通过');
+          "
+
       - name: 上传构建结果
         uses: actions/upload-artifact@v7
         with:
@@ -205,15 +247,16 @@ jobs:
       - name: 测试总结
         run: |
           echo ""
-          echo "🎉 所有测试通过！"
+          echo "所有测试通过"
           echo "================================"
-          echo "✅ Manifest 文件验证"
-          echo "✅ 必需文件检查"
-          echo "✅ 基础测试"
-          echo "✅ 代码检查"
-          echo "✅ Chrome 构建"
-          echo "✅ Firefox 构建"
-          echo "✅ 扩展包生成"
-          echo "✅ 构建结果验证"
+          echo "[OK] Manifest 文件验证"
+          echo "[OK] 必需文件检查"
+          echo "[OK] 基础测试"
+          echo "[OK] 代码检查"
+          echo "[OK] Chrome 构建"
+          echo "[OK] Firefox 构建"
+          echo "[OK] userscript 构建"
+          echo "[OK] 扩展包生成"
+          echo "[OK] 构建结果验证"
           echo "================================"
-          echo "🚀 准备发布！"
+          echo "准备发布"

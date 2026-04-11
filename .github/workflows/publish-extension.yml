@@ -35,16 +35,19 @@ jobs:
         with:
           node-version: "18"
 
+      - name: 安装 Node.js 依赖
+        run: npm ci
+
       # 第四步：验证 manifest 文件格式
       - name: 验证 manifest 文件
         run: |
           # 验证 Chrome manifest.json 是否为有效的 JSON
           node -e "JSON.parse(require('fs').readFileSync('manifest.json', 'utf8'))"
-          echo "✅ Chrome manifest.json 格式有效"
+          echo "[OK] Chrome manifest.json 格式有效"
 
           # 验证 Firefox manifest 是否为有效的 JSON
           node -e "JSON.parse(require('fs').readFileSync('manifest-firefox.json', 'utf8'))"
-          echo "✅ Firefox manifest.json 格式有效"
+          echo "[OK] Firefox manifest.json 格式有效"
 
       # 第五步：设置版本号
       - name: 从输入设置版本
@@ -52,17 +55,23 @@ jobs:
         run: |
           # 从工作流输入获取版本号
           VERSION="${{ inputs.version }}"
+          if ! printf '%s' "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "版本号格式非法: $VERSION"
+            exit 1
+          fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "手动设置版本: $VERSION"
 
       # 第六步：更新所有配置文件中的版本号
       - name: 更新 manifest 版本
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
         run: |
           # 更新 Chrome manifest.json 中的版本
           node -e "
             const fs = require('fs');
             const manifest = JSON.parse(fs.readFileSync('manifest.json', 'utf8'));
-            manifest.version = '${{ steps.version.outputs.version }}';
+            manifest.version = process.env.VERSION;
             fs.writeFileSync('manifest.json', JSON.stringify(manifest, null, 2));
             console.log('已更新 Chrome manifest.json 版本为:', manifest.version);
           "
@@ -71,22 +80,18 @@ jobs:
           node -e "
             const fs = require('fs');
             const manifest = JSON.parse(fs.readFileSync('manifest-firefox.json', 'utf8'));
-            manifest.version = '${{ steps.version.outputs.version }}';
+            manifest.version = process.env.VERSION;
             fs.writeFileSync('manifest-firefox.json', JSON.stringify(manifest, null, 2));
             console.log('已更新 Firefox manifest.json 版本为:', manifest.version);
           "
 
       # 第七步：同步更新 package.json 版本
       - name: 更新 package.json 版本
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
         run: |
-          # 更新 package.json 中的版本以保持一致性
-          node -e "
-            const fs = require('fs');
-            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-            pkg.version = '${{ steps.version.outputs.version }}';
-            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));
-            console.log('已更新 package.json 版本为:', pkg.version);
-          "
+          npm version "$VERSION" --no-git-tag-version
+          echo "已同步 package.json 和 package-lock.json 版本为: $VERSION"
 
       # 第八步：提交版本更改并创建 Git 标签
       - name: 提交并推送版本更新
@@ -96,7 +101,7 @@ jobs:
           git config --local user.name "GitHub Action"
 
           # 添加更新的文件
-          git add manifest.json manifest-firefox.json package.json
+          git add manifest.json manifest-firefox.json package.json package-lock.json
 
           # 检查是否有需要提交的更改
           if git diff --staged --quiet; then
@@ -112,25 +117,26 @@ jobs:
             git push origin HEAD:main
             git push origin "v${{ steps.version.outputs.version }}"
             
-            echo "✅ 版本更新已提交并推送到主分支，包含标签"
+            echo "[OK] 版本更新已提交并推送到主分支，包含标签"
           fi
 
       - name: 构建扩展包
         run: |
-          echo "🏗️ 开始构建扩展包..."
+          echo "开始构建扩展包..."
 
           # 运行构建脚本构建所有平台
           python build.py --platform all --package
 
-          echo "📦 扩展包构建完成"
+          echo "扩展包构建完成"
           ls -la packages/ || echo "packages 目录不存在"
 
       - name: 运行测试
         run: |
-          echo "🧪 运行基础测试..."
+          echo "运行基础测试..."
           python dev.py test
+          npm run test:unit
 
-          echo "🔍 运行代码检查..."
+          echo "运行代码检查..."
           python dev.py lint
 
       - name: 发布到 Chrome 应用商店
@@ -178,9 +184,10 @@ jobs:
           files: |
             packages/Xget-Now_${{ steps.version.outputs.version }}.chromium.zip
             packages/Xget-Now_${{ steps.version.outputs.version }}.firefox.xpi
+            packages/Xget-Now_${{ steps.version.outputs.version }}.userscript.user.js
           generate_release_notes: true
           body: |
-            ## 📦 扩展包下载
+            ## 扩展包下载
 
             ### Chromium
             - **文件**: `Xget-Now_${{ steps.version.outputs.version }}.chromium.zip`
@@ -192,11 +199,16 @@ jobs:
             - **支持**: Firefox 或其他基于 Firefox 的浏览器
             - **Manifest**: v2
 
-            ## 🚀 安装方法
+            ### Userscript
+            - **文件**: `Xget-Now_${{ steps.version.outputs.version }}.userscript.user.js`
+            - **支持**: 用户脚本管理器
+            - **能力**: GitHub、GitLab、Gitea、Codeberg、Hugging Face、PyPI、npm、SourceForge 下载加速
+
+            ## 安装方法
 
             详细的安装说明请参考：[手动安装指南](https://github.com/xixu-me/Xget-Now?tab=readme-ov-file#%E6%89%8B%E5%8A%A8%E5%AE%89%E8%A3%85)
 
-            ## 📝 更新日志
+            ## 更新日志
 
             详细的更改内容请查看下方的自动生成的发布说明。
 
@@ -205,51 +217,52 @@ jobs:
 
       - name: 检查发布结果
         run: |
-          echo "📊 发布结果摘要:"
+          echo "发布结果摘要:"
           echo "================================"
-          echo "📦 版本: ${{ steps.version.outputs.version }}"
+          echo "版本: ${{ steps.version.outputs.version }}"
           echo ""
 
           if [ "${{ steps.chrome-publish.outcome }}" = "success" ]; then
-            echo "✅ Chrome 应用商店: 发布成功"
+            echo "[OK] Chrome 应用商店: 发布成功"
           elif [ "${{ steps.chrome-publish.outcome }}" = "failure" ]; then
-            echo "❌ Chrome 应用商店: 发布失败"
+            echo "[FAIL] Chrome 应用商店: 发布失败"
           else
-            echo "⚠️ Chrome 应用商店: 已跳过（缺少密钥或其他原因）"
+            echo "[WARN] Chrome 应用商店: 已跳过（缺少密钥或其他原因）"
           fi
 
           if [ "${{ steps.edge-publish.outcome }}" = "success" ]; then
-            echo "✅ Edge 加载项: 发布成功"
+            echo "[OK] Edge 加载项: 发布成功"
           elif [ "${{ steps.edge-publish.outcome }}" = "failure" ]; then
-            echo "❌ Edge 加载项: 发布失败"
+            echo "[FAIL] Edge 加载项: 发布失败"
           else
-            echo "⚠️ Edge 加载项: 已跳过（缺少密钥或其他原因）"
+            echo "[WARN] Edge 加载项: 已跳过（缺少密钥或其他原因）"
           fi
 
           if [ "${{ steps.firefox-publish.outcome }}" = "success" ]; then
-            echo "✅ Firefox 附加组件: 发布成功"
+            echo "[OK] Firefox 附加组件: 发布成功"
           elif [ "${{ steps.firefox-publish.outcome }}" = "failure" ]; then
-            echo "❌ Firefox 附加组件: 发布失败"
+            echo "[FAIL] Firefox 附加组件: 发布失败"
           else
-            echo "⚠️ Firefox 附加组件: 已跳过（缺少密钥或其他原因）"
+            echo "[WARN] Firefox 附加组件: 已跳过（缺少密钥或其他原因）"
           fi
 
           echo ""
-          echo "✅ GitHub 发布: 已创建包含所有扩展文件"
+          echo "[OK] GitHub 发布: 已创建包含所有扩展文件"
           echo "================================"
 
       - name: 通知成功
         run: |
           echo ""
-          echo "🎉 成功发布 Xget Now ${{ steps.version.outputs.version }}!"
+          echo "成功发布 Xget Now ${{ steps.version.outputs.version }}"
           echo "================================"
-          echo "🔗 Chrome 应用商店: https://chrome.google.com/webstore/detail/${{ secrets.CHROME_EXTENSION_ID }}"
-          echo "🔗 Edge 加载项: 查看发布页面获取最新信息"
-          echo "🦊 Firefox 附加组件: 查看 Mozilla Add-ons 获取最新信息"
-          echo "📦 GitHub 发布: https://github.com/${{ github.repository }}/releases/tag/v${{ steps.version.outputs.version }}"
-          echo "📖 安装指南: https://github.com/${{ github.repository }}#installation"
+          echo "Chrome 应用商店: https://chrome.google.com/webstore/detail/${{ secrets.CHROME_EXTENSION_ID }}"
+          echo "Edge 加载项: 查看发布页面获取最新信息"
+          echo "Firefox 附加组件: 查看 Mozilla Add-ons 获取最新信息"
+          echo "GitHub 发布: https://github.com/${{ github.repository }}/releases/tag/v${{ steps.version.outputs.version }}"
+          echo "安装指南: https://github.com/${{ github.repository }}#installation"
           echo ""
-          echo "📁 发布的文件:"
+          echo "发布的文件:"
           echo "  - Xget-Now_${{ steps.version.outputs.version }}.chromium.zip (Chromium)"
           echo "  - Xget-Now_${{ steps.version.outputs.version }}.firefox.xpi (Firefox)"
+          echo "  - Xget-Now_${{ steps.version.outputs.version }}.userscript.user.js (Userscript)"
           echo "================================"

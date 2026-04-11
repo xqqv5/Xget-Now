@@ -68,6 +68,8 @@ def watch_files():
         "src/content/index.js",
         "src/popup/popup.js",
         "src/popup/index.html",
+        "src/shared/download-core.js",
+        "src/userscript/index.js",
         "src/shared/compat/webext-compat.js",
         "src/shared/compat/firefox-compat.js",
         "src/shared/platform-detector.js",
@@ -101,9 +103,9 @@ def watch_files():
                     text=True,
                 )
                 if result.returncode == 0:
-                    print("✓ 构建成功")
+                    print("[OK] 构建成功")
                 else:
-                    print(f"✗ 构建失败: {result.stderr}")
+                    print(f"[FAIL] 构建失败: {result.stderr}")
 
             time.sleep(1)
 
@@ -154,11 +156,11 @@ def run_tests():
                 assert manifest["manifest_version"] == 2, "Firefox 需要 Manifest V2"
                 assert "browser_action" in manifest, "Firefox 需要 browser_action 字段"
 
-            print(f"✓ {platform} manifest 测试通过")
+            print(f"[OK] {platform} manifest 测试通过")
             return True
 
         except Exception as e:
-            print(f"✗ {platform} manifest 测试失败: {e}")
+            print(f"[FAIL] {platform} manifest 测试失败: {e}")
             return False
 
     # 测试文件存在性
@@ -170,6 +172,8 @@ def run_tests():
             "src/content/index.js",
             "src/popup/popup.js",
             "src/popup/index.html",
+            "src/shared/download-core.js",
+            "src/userscript/index.js",
             "src/shared/compat/webext-compat.js",
             "src/shared/compat/firefox-compat.js",
             "src/shared/platform-detector.js",
@@ -179,9 +183,9 @@ def run_tests():
         all_exist = True
         for file in required_files:
             if os.path.exists(file):
-                print(f"✓ {file} 存在")
+                print(f"[OK] {file} 存在")
             else:
-                print(f"✗ {file} 不存在")
+                print(f"[FAIL] {file} 不存在")
                 all_exist = False
 
         return all_exist
@@ -220,6 +224,8 @@ def lint_code():
         "src/background/index.js",
         "src/content/index.js",
         "src/popup/popup.js",
+        "src/shared/download-core.js",
+        "src/userscript/index.js",
         "src/shared/compat/webext-compat.js",
         "src/shared/compat/firefox-compat.js",
         "src/shared/platform-detector.js",
@@ -271,11 +277,11 @@ def lint_code():
                     issues.append("建议使用 console.error 处理错误")
 
             if issues:
-                print(f"  ⚠ {file} 发现问题:")
+                print(f"  [WARN] {file} 发现问题:")
                 for issue in issues:
                     print(f"    - {issue}")
             else:
-                print(f"  ✓ {file} 无明显问题")
+                print(f"  [OK] {file} 无明显问题")
 
 
 def main():

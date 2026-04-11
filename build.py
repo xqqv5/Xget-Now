@@ -379,11 +379,11 @@ def validate_manifest(manifest_path, platform):
                 "applications" in manifest or "browser_specific_settings" in manifest
             ), "Firefox 需要应用ID"
 
-        print(f"✓ {platform} manifest 验证通过")
+        print(f"[OK] {platform} manifest 验证通过")
         return True
 
     except Exception as e:
-        print(f"✗ {platform} manifest 验证失败: {e}")
+        print(f"[FAIL] {platform} manifest 验证失败: {e}")
         return False
 
 
@@ -440,7 +440,7 @@ def main():
     # 总结
     print("\n构建总结:")
     for platform, build_dir in build_results:
-        print(f"✓ {platform}: {build_dir}")
+        print(f"[OK] {platform}: {build_dir}")
 
     if args.package:
         print("\n构建包位于 packages/ 目录")

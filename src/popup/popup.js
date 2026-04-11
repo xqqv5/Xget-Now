@@ -381,9 +381,9 @@ async function saveSettings() {
       if (!settings.xgetDomain && settings.enabled) {
         showStatus("请配置你的 Xget 域名", "error");
       } else if (settings.xgetDomain && settings.enabled) {
-        showStatus("✅ 设置已保存！查看页面通知中的刷新按钮", "success");
+        showStatus("设置已保存。查看页面通知中的刷新按钮。", "success");
       } else {
-        showStatus("✅ 设置已保存！查看页面通知中的刷新按钮", "success");
+        showStatus("设置已保存。查看页面通知中的刷新按钮。", "success");
       }
     } else if (response && response.error) {
       console.error("保存设置失败：", response.error);
