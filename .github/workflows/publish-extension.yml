@@ -177,7 +177,7 @@ jobs:
             构建说明：直接从源代码打包，无需编译或转译。
 
       - name: 创建 GitHub 发布
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: v${{ steps.version.outputs.version }}
           name: Xget Now ${{ steps.version.outputs.version }}
